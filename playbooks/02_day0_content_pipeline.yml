@@ -1,0 +1,25 @@
+--- 
+- name: "Day-0: Synchronize Content &amp; Publish/Promote Content View" 
+  hosts: localhost 
+  gather_facts: false 
+  vars_files: 
+    - ../vault/vault.yml 
+  module_defaults: 
+    group/redhat.satellite.satellite: 
+    username: "{{ satellite_username }}" 
+    password: "{{ satellite_password }}" 
+    server_url: "{{ satellite_url }}" 
+    validate_certs: true 
+    
+    tasks: 
+      - name: Synchronize RHEL 9 Repositories 
+        redhat.satellite.repository_sync: 
+          product: "Red Hat Enterprise Linux for x86_64" 
+          organization: "{{ satellite_organization }}" 
+          
+      - name: Publish Content View Version 
+        redhat.satellite.content_view_version: 
+          content_view: "CV_RHEL9_Production" 
+          organization: "{{ satellite_organization }}" 
+          description: "Automated Day-0 Build" 
+          lifecycle_environments: - "Production"
