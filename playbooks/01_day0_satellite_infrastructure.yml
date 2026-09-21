@@ -1,0 +1,69 @@
+
+---
+- name: "Day-0: Provision Satellite Infrastructure &amp; Activation Keys"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vault/vault.yml
+  module_defaults:
+    group/redhat.satellite.satellite:
+      username: "{{ satellite_username }}"
+      password: "{{ satellite_password }}"
+      server_url: "{{ satellite_url }}"
+      validate_certs: true
+
+  tasks:
+    - name: Ensure Lifecycle Environments Exist
+      redhat.satellite.lifecycle_environment:
+        name: "Production"
+        prior: "Library"
+        organization: "{{ satellite_organization }}"
+        state: present
+
+    - name: Enable RHEL 9 BaseOS Repository
+      redhat.satellite.repository_set:
+        name: "Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)"
+        organization: "{{ satellite_organization }}"
+        product: "Red Hat Enterprise Linux for x86_64"
+        repositories:
+          - releasever: "9"
+            state: enabled
+
+    - name: Enable RHEL 9 AppStream Repository
+      redhat.satellite.repository_set:
+        name: "Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)"
+        organization: "{{ satellite_organization }}"
+        product: "Red Hat Enterprise Linux for x86_64"
+        repositories:
+          - releasever: "9"
+            state: enabled
+
+    - name: Enable Satellite Client 6 Repository for RHEL 9
+      redhat.satellite.repository_set:
+        name: "Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)"
+        organization: "{{ satellite_organization }}"
+        product: "Red Hat Enterprise Linux for x86_64"
+        repositories:
+          - state: enabled
+
+    - name: Create RHEL 9 Content View
+      redhat.satellite.content_view:
+        name: "CV_RHEL9_Production"
+        organization: "{{ satellite_organization }}"
+        repositories:
+          - name: "Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9"
+            product: "Red Hat Enterprise Linux for x86_64"
+          - name: "Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9"
+            product: "Red Hat Enterprise Linux for x86_64"
+          - name: "Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs"
+            product: "Red Hat Enterprise Linux for x86_64"
+
+    - name: Create Production Activation Key
+      redhat.satellite.activation_key:
+        name: "rhel9-prod-key"
+        organization: "{{ satellite_organization }}"
+        lifecycle_environment: "Production"
+        content_view: "CV_RHEL9_Production"
+        state: present
+
+```
