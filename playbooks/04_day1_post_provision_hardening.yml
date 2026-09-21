@@ -1,0 +1,47 @@
+--- 
+  - name: "Day-1: Post-Provisioning RHEL 9 System Hardening & Configuration" 
+    hosts: all 
+    become: true 
+    
+    tasks: 
+      - name: Ensure System Time is Synchronized via Chrony 
+        ansible.builtin.include_role: 
+          name: rhel-system-roles.timesync 
+        vars: 
+          timesync_ntp_servers: 
+            - hostname: "pool.ntp.org" 
+              iburst: true 
+              
+      - name: Enforce Standard Firewall Rules 
+        ansible.builtin.include_role: 
+          name: rhel-system-roles.firewall 
+          vars: 
+            firewall: 
+              - service: ssh 
+                state: enabled 
+              - port: '8080/tcp' 
+                state: disabled 
+                
+      - name: Install and Register Insights Client 
+        ansible.builtin.include_role: 
+          name: RedHatInsights.insights-client 
+          
+      - name: Create Admin Deployment User 
+        ansible.builtin.user: 
+          name: "sysadmin" 
+          state: present 
+          groups: "wheel" 
+          append: true 
+          
+      - name: Disable Root SSH Password Authentication 
+        ansible.builtin.lineinfile: 
+          path: /etc/ssh/sshd_config 
+          regexp: '^#?PermitRootLogin' 
+          line: 'PermitRootLogin prohibit-password' 
+          state: present 
+        notify: Restart SSHD 
+    handlers: 
+      - name: Restart SSHD 
+        ansible.builtin.service: 
+          name: sshd 
+          state: restarted
