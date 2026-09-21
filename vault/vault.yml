@@ -1,0 +1,6 @@
+--- 
+satellite_username: "admin" 
+satellite_password: "YourSecurePassword" 
+satellite_url: "https://satellite.example.com" 
+satellite_organization: "Default Organization" 
+satellite_location: "Default Location
