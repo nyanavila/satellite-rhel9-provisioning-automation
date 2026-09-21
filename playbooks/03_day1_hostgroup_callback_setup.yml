@@ -1,0 +1,42 @@
+--- 
+- name: "Day-1: Configure Host Group with AAP Provisioning Callback" 
+  hosts: localhost 
+  gather_facts: false 
+  vars_files: 
+    - ../vault/vault.yml 
+    
+  vars: 
+    aap_api_url: "https://aap.example.com/api/controller/v2" 
+    aap_job_template_id: "42" 
+    aap_host_config_key: "YOUR\_GENERATED\_HOST\_CONFIG\_KEY" 
+    
+  module_defaults: 
+    group/redhat.satellite.satellite: 
+      username: "{{ satellite_username }}" 
+      password: "{{ satellite_password }}" 
+      server_url: "{{ satellite_url }}" 
+      validate_certs: true 
+      
+  tasks: 
+    - name: Create Production Host Group with AAP Callback Parameters 
+      redhat.satellite.hostgroup: 
+        name: "RHEL9_Production_HG" 
+        organization: "{{ satellite_organization }}" 
+        location: "{{ satellite_location }}" 
+        lifecycle_environment: "Production" 
+        content_view: "CV_RHEL9_Production" 
+        environment: "KT_Default_Organization_ProductionCV_RHEL9_Production" 
+        pxe_loader: "Grub2 UEFI HTTP" 
+        parameters: 
+          - name: "kt_activation_keys" 
+            value: "rhel9-prod-key" 
+          - name: "ansible_tower_provisioning" 
+            value: "true" 
+            parameter_type: "boolean" 
+          - name: "ansible_tower_api_url" 
+            value: "{{ aap_api_url }}" 
+          - name: "ansible_job_template_id" 
+            value: "{{ aap_job_template_id }}" 
+          - name: "ansible_host_config_key" 
+            value: "{{ aap_host_config_key }}" 
+        state: present
